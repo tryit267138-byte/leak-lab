@@ -150,5 +150,5 @@
     transition: transform 0.2s ease;
     box-shadow: var(--ll-shadow);
   }
-  .menuOpen { transform: translateX(0); }
+  .menu.menuOpen { transform: translateX(0); }
 }
