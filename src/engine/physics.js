@@ -44,4 +44,21 @@ export const MATERIAL_LIFE = {
   sheet: 15,    // 複合防水毯
 }
 
+// 每次重做單價($/m²)——m12 全生命週期成本用
+export const MATERIAL_COST = {
+  silicone: 500,
+  pu: 1500,
+  sheet: 3000,
+}
+
+// 失效即需重做,重做次數 = floor(年數 / 壽命)
+export function redoCount(years, mat) {
+  return Math.floor(years / MATERIAL_LIFE[mat])
+}
+
+// 總持有成本 = 重做次數 × 單價
+export function lifetimeCost(years, mat) {
+  return redoCount(years, mat) * MATERIAL_COST[mat]
+}
+
 export const G = 9.8 // 重力加速度(m/s²),2D 粒子引擎用
