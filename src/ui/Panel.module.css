@@ -1,0 +1,14 @@
+.panel {
+  background: var(--ll-panel);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius);
+  box-shadow: var(--ll-shadow);
+  padding: 16px;
+}
+
+.title {
+  font-size: 14px;
+  color: var(--ll-text);
+  margin-bottom: 14px;
+  letter-spacing: var(--ll-title-spacing);
+}

@@ -1,0 +1,104 @@
+/* 各模組共用的版面骨架:左舞台(canvas)+ 右控制欄。手機改上下堆疊。 */
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  height: 100%;
+  min-height: 0;
+}
+
+.stage {
+  background: var(--ll-panel);
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius);
+  box-shadow: var(--ll-shadow);
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+/* 固定 620:340 構圖(沿用原型),隨容器等比縮放 */
+.canvas {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 620 / 340;
+  height: auto;
+  background: #0a0d10;
+  border-radius: var(--ll-radius);
+  border: 1px solid var(--ll-border);
+  touch-action: none;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 2px;
+}
+
+.toggleRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.note {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ll-text-dim);
+  margin-bottom: 10px;
+}
+
+.note b {
+  color: var(--ll-text);
+}
+
+.note:last-child {
+  margin-bottom: 0;
+}
+
+.link {
+  color: var(--ll-primary);
+  font-size: 13px;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* 原型的即時狀態提示框(canvas 下方),支援 <b>/.ok/.bad 行內標記 */
+.dynNote {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ll-text-dim);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--ll-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-height: 46px;
+}
+.dynNote :global(b) { color: var(--ll-hint); }
+.dynNote :global(.ok) { color: var(--ll-primary); }
+.dynNote :global(.bad) { color: var(--ll-warn); }
+
+.stageCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 46vh auto;
+    height: auto;
+  }
+}

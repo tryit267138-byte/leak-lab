@@ -1,0 +1,36 @@
+.btn {
+  border: 1px solid var(--ll-border);
+  border-radius: var(--ll-radius);
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+  background: transparent;
+  color: var(--ll-text);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.primary {
+  background: var(--ll-primary);
+  border-color: var(--ll-primary);
+  color: #0d1216;
+}
+
+.ghost {
+  background: var(--ll-panel);
+  color: var(--ll-text-dim);
+}
+
+.toggle {
+  background: var(--ll-panel);
+  color: var(--ll-text-dim);
+}
+
+.toggle.active {
+  background: var(--ll-primary);
+  border-color: var(--ll-primary);
+  color: #0d1216;
+}

@@ -1,0 +1,33 @@
+/* 全域基底樣式。顏色/字體一律走 :root 的 CSS 變數(由 ui/tokens.js 注入)。 */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--ll-bg, #0d1216);
+  color: var(--ll-text, #e7eef2);
+  font-family: var(--ll-font, system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+h1, h2, h3, h4 {
+  letter-spacing: var(--ll-title-spacing, 2px);
+  font-weight: 700;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--ll-border, #263340); border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }

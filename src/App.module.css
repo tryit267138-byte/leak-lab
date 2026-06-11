@@ -1,0 +1,154 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--ll-border);
+  background: var(--ll-panel);
+}
+
+.burger {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--ll-border);
+  color: var(--ll-text);
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  font-size: 18px;
+}
+
+.brand {
+  font-size: 18px;
+  color: var(--ll-primary);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.sub {
+  font-size: 12px;
+  color: var(--ll-text-dim);
+  letter-spacing: 2px;
+  font-weight: 400;
+}
+
+.crumb {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--ll-text-dim);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.menu {
+  width: 250px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--ll-border);
+  padding: 14px;
+  overflow-y: auto;
+  background: var(--ll-bg);
+}
+
+.group {
+  margin-bottom: 18px;
+}
+
+.groupTitle {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--ll-hint);
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--ll-radius);
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  color: var(--ll-text);
+}
+
+.item:hover {
+  background: var(--ll-panel);
+  border-color: var(--ll-border);
+}
+
+.itemActive {
+  background: var(--ll-panel);
+  border-color: var(--ll-primary);
+}
+
+.itemTitle {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.itemDesc {
+  font-size: 11px;
+  color: var(--ll-text-dim);
+  line-height: 1.5;
+}
+
+.stage {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  overflow: auto;
+}
+
+.welcome {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+  color: var(--ll-text-dim);
+  padding: 24px;
+}
+
+.welcome h2 {
+  color: var(--ll-text);
+  font-size: 26px;
+}
+
+.welcome p {
+  max-width: 440px;
+  line-height: 1.8;
+  font-size: 14px;
+}
+
+@media (max-width: 760px) {
+  .burger { display: block; }
+  .crumb { display: none; }
+  .menu {
+    position: fixed;
+    top: 63px;
+    left: 0;
+    bottom: 0;
+    z-index: 20;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: var(--ll-shadow);
+  }
+  .menuOpen { transform: translateX(0); }
+}

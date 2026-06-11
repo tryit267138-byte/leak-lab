@@ -1,0 +1,32 @@
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--ll-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 88px;
+}
+
+.label {
+  font-size: 11px;
+  color: var(--ll-text-dim);
+}
+
+.value {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.normal { color: var(--ll-text); }
+.primary { color: var(--ll-primary); }
+.warn { color: var(--ll-warn); }
+.hint { color: var(--ll-hint); }
