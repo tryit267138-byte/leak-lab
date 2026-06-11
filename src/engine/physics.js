@@ -44,21 +44,35 @@ export const MATERIAL_LIFE = {
   sheet: 15,    // 複合防水毯
 }
 
-// 每次重做單價($/m²)——m12 全生命週期成本用
+// 材料單價($/m²)——m12 全生命週期成本用
 export const MATERIAL_COST = {
   silicone: 500,
   pu: 1500,
   sheet: 3000,
 }
 
-// 失效即需重做,重做次數 = floor(年數 / 壽命)
+// 每次進場固定成本($/m² 攤提):工資、假設工程、拆除清運
+export const SETUP_COST = 2000
+
+// 期間內的施作次數 = ceil(年數 / 壽命),含初次施作(至少 1 次)
+export function setupCount(years, mat) {
+  return Math.max(1, Math.ceil(years / MATERIAL_LIFE[mat]))
+}
+
+// 已重做次數(用於劣化視覺的周期重置)= floor(年數 / 壽命)
 export function redoCount(years, mat) {
   return Math.floor(years / MATERIAL_LIFE[mat])
 }
 
-// 總持有成本 = 重做次數 × 單價
+// 全生命週期成本 = 施作次數 ×(材料單價 + 進場成本)
 export function lifetimeCost(years, mat) {
-  return redoCount(years, mat) * MATERIAL_COST[mat]
+  return setupCount(years, mat) * (MATERIAL_COST[mat] + SETUP_COST)
+}
+
+// 拆分:材料成本 / 進場成本(堆疊長條圖用)
+export function costBreakdown(years, mat) {
+  const n = setupCount(years, mat)
+  return { material: n * MATERIAL_COST[mat], setup: n * SETUP_COST, total: n * (MATERIAL_COST[mat] + SETUP_COST) }
 }
 
 export const G = 9.8 // 重力加速度(m/s²),2D 粒子引擎用
