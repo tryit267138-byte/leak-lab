@@ -29,7 +29,7 @@
   width: 100%;
   height: 6px;
   border-radius: 6px;
-  background: var(--ll-border);
+  background: linear-gradient(90deg, var(--ll-primary) 0%, var(--ll-primary) var(--pct, 50%), var(--ll-border) var(--pct, 50%), var(--ll-border) 100%);
   outline: none;
 }
 
@@ -41,9 +41,11 @@
   border-radius: 50%;
   background: var(--ll-primary);
   border: 3px solid var(--ll-bg);
-  box-shadow: 0 0 0 1px var(--ll-primary);
+  box-shadow: 0 0 0 1px var(--ll-primary), 0 0 10px rgba(102, 211, 192, 0.5);
   cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
 }
+.input::-webkit-slider-thumb:active { transform: scale(1.15); }
 
 .input::-moz-range-thumb {
   width: 22px;

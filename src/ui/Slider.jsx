@@ -15,6 +15,7 @@ export function Slider({ label, value, min, max, step = 1, unit = '', onChange }
         max={max}
         step={step}
         value={value}
+        style={{ '--pct': `${((value - min) / (max - min)) * 100}%` }}
         onChange={(e) => onChange(Number(e.target.value))}
       />
     </label>

@@ -3,6 +3,8 @@ import * as THREE from 'three'
 import { useStore } from '../../store.js'
 import { createRenderer, particleCap, FpsMonitor, isMobileDevice } from '../../engine/three3d.js'
 import { WATERJET_THRESH, waterjetDoseRate, waterjetOverpressure } from '../../engine/physics.js'
+import { sfx, stopSpray } from '../../engine/audio.js'
+import { emitComplete } from '../../engine/labEvents.js'
 import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Button } from '../../ui/Button.jsx'
@@ -100,9 +102,9 @@ export function Component() {
       st.pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1
       st.pointer.y = -((e.clientY - r.top) / r.height) * 2 + 1
     }
-    const down = (e) => { st.spraying = true; setPointer(e) }
+    const down = (e) => { st.spraying = true; setPointer(e); sfx.spray() }
     const move = (e) => { if (st.spraying) setPointer(e) }
-    const up = () => { st.spraying = false }
+    const up = () => { st.spraying = false; stopSpray() }
     renderer.domElement.addEventListener('pointerdown', down)
     renderer.domElement.addEventListener('pointermove', move)
     renderer.domElement.addEventListener('pointerup', up)
@@ -157,7 +159,9 @@ export function Component() {
             if (w.dose > WATERJET_THRESH) {
               w.found = true
               const mk = new THREE.Mesh(markerGeo, foundMat); mk.position.copy(w.p); scene.add(mk); markers.push(mk)
-              api.current.onFound && api.current.onFound(weaks.filter((x) => x.found).length)
+              const fc = weaks.filter((x) => x.found).length
+              api.current.onFound && api.current.onFound(fc)
+              sfx.correct(); emitComplete('m14-sitetest3d', fc / 2 * 100)
             }
           }
         })
@@ -167,6 +171,7 @@ export function Component() {
             goodDose = 0
             const mk = new THREE.Mesh(markerGeo, falseMat); mk.position.copy(aim); scene.add(mk); markers.push(mk)
             api.current.onFalse && api.current.onFalse(markers.filter((m) => m.material === falseMat).length)
+            sfx.warn()
           }
         }
       }

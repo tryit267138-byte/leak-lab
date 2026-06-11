@@ -4,6 +4,8 @@ import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Button } from '../../ui/Button.jsx'
 import { Hud } from '../../ui/Hud.jsx'
+import { sfx } from '../../engine/audio.js'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -18,7 +20,7 @@ const R = (a, b) => a + Math.random() * (b - a)
 
 export function Component() {
   // 對應原型 M1 狀態
-  const m = useRef({ p: 4, coat: 'none', mat: 'pu', drops: [], leak: 0, blister: 0, popped: false, cryst: 0, msg: '' }).current
+  const m = useRef({ p: 4, coat: 'none', mat: 'pu', drops: [], leak: 0, blister: 0, popped: false, cryst: 0, msg: '', shake: 0 }).current
   const [, setTick] = useState(0)
   const acc = useRef(0)
   const flush = () => setTick((t) => t + 1)
@@ -44,13 +46,15 @@ export function Component() {
         if (!m.popped) {
           m.blister = Math.min(30, m.blister + p * 0.012)
           msg = `<b>背水面+皮膜型</b>:水穿過結構,從背面「頂」塗膜。起鼓中…(${(m.blister / 30 * 100) | 0}%)。<b>水壓變成你的敵人</b>。`
-          if (m.blister >= 30) { m.popped = true; for (let k = 0; k < 36; k++) m.drops.push({ x: 336, y: CY, vx: R(0.5, 3), vy: R(-2, 1) }) }
+          if (m.blister >= 30) { m.popped = true; m.shake = 8; sfx.warn(); emitComplete('m01-pressure', 100); for (let k = 0; k < 36; k++) m.drops.push({ x: 336, y: CY, vx: R(0.5, 3), vy: R(-2, 1) }) }
         } else {
           leakRate = p * 0.05
           msg = '<span class="bad">💥 皮膜被負水壓頂破!</span>這就是為什麼地下室/浴室背水面用一般PU會失敗——皮膜型材料只能附著,擋不住背後的水壓。'
         }
       } else {
+        const wasCryst = m.cryst >= 1
         m.cryst = Math.min(1, m.cryst + 0.003)
+        if (!wasCryst && m.cryst >= 1) { sfx.drop(); emitComplete('m01-pressure', 100) }
         leakRate = p * 0.05 * (1 - m.cryst)
         msg = m.cryst < 1
           ? `<b>背水面+滲透結晶型</b>:活性成分順著水的毛細通路滲入結構,在孔隙內結晶填塞…(${(m.cryst * 100) | 0}%)。它不靠附著,靠<b>長進混凝土裡</b>。`
@@ -58,13 +62,16 @@ export function Component() {
       }
     }
     if (Math.random() < leakRate) m.drops.push({ x: 336, y: CY + R(-2, 2), vx: R(0.5, 1) + p * 0.12, vy: R(-0.3, 0.3) })
+    if (leakRate > 0 && Math.random() < 0.04) sfx.drop()
     m.drops.forEach((d) => { d.vy += 0.18; d.x += d.vx; d.y += d.vy; if (d.y > 316) { d.y = 316; d.vy = 0; d.vx *= 0.9 } })
     if (m.drops.length > 400) m.drops.splice(0, m.drops.length - 400)
     m.leak += leakRate
     m.msg = msg + `<br>累積滲水:<b>${m.leak.toFixed(0)} 單位</b>`
 
-    // draw
-    ctx.fillStyle = '#0a0d10'; ctx.fillRect(0, 0, 620, 340)
+    // draw —— 前幀半透明疊加(粒子拖尾)
+    ctx.fillStyle = 'rgba(10,13,16,0.32)'; ctx.fillRect(0, 0, 620, 340)
+    let sh = 0
+    if (m.shake > 0) { sh = m.shake; m.shake = Math.max(0, sh - dt * 45); ctx.save(); ctx.translate((Math.random() - 0.5) * sh, (Math.random() - 0.5) * sh) }
     const lvl = 320 - (60 + p * 22)
     const grd = ctx.createLinearGradient(0, lvl, 0, 320); grd.addColorStop(0, '#3a8fd4'); grd.addColorStop(1, '#1c4a7a')
     ctx.fillStyle = grd; ctx.fillRect(20, lvl, WX - 20, 320 - lvl)
@@ -90,9 +97,11 @@ export function Component() {
       const ay = lvl + 15 + k * ((315 - lvl) / Math.max(p, 1))
       ctx.beginPath(); ctx.moveTo(WX - 30, ay); ctx.lineTo(WX - 8, ay); ctx.lineTo(WX - 14, ay - 4); ctx.moveTo(WX - 8, ay); ctx.lineTo(WX - 14, ay + 4); ctx.stroke()
     }
-    ctx.fillStyle = '#5db2e8'; m.drops.forEach((d) => ctx.fillRect(d.x, d.y, 3, 3))
+    ctx.save(); ctx.shadowBlur = 8; ctx.shadowColor = '#5db2e8'; ctx.fillStyle = '#5db2e8'
+    m.drops.forEach((d) => ctx.fillRect(d.x, d.y, 3, 3)); ctx.restore()
     ctx.fillStyle = '#222a32'; ctx.fillRect(WX + WW, 320, 620 - WX - WW, 20); ctx.fillRect(0, 320, WX, 20)
 
+    if (sh) ctx.restore()
     acc.current += dt; if (acc.current > 0.12) { acc.current = 0; flush() }
   })
 

@@ -6,6 +6,7 @@ import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Button } from '../../ui/Button.jsx'
 import { Hud } from '../../ui/Hud.jsx'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -42,6 +43,7 @@ export function Component() {
     const exposedFrac = exposedCm / HEADCM
     const entry = exposedFrac * (m.tile / 100) * (m.showerMin / 60) * 0.5
     m.sat = Math.max(0, Math.min(1, m.sat + entry * dt - 0.02 * dt))
+    if (m.sat > 0.6) emitComplete('m10-bathroom', 100)
 
     // 蓮蓬頭水流
     for (let k = 0; k < 4; k++) shower.emit({ x: 150 + R(-4, 4), y: 70, vx: R(-4, 4), vy: R(120, 180), life: 2, r: 1.8 })

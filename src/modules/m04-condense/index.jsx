@@ -4,6 +4,8 @@ import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Button } from '../../ui/Button.jsx'
 import { Hud } from '../../ui/Hud.jsx'
+import { sfx } from '../../engine/audio.js'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -30,6 +32,8 @@ export function Component() {
   const answer = (a) => {
     if (!m.quiz) return
     const ok = a === m.quiz.ans
+    sfx[ok ? 'correct' : 'wrong']()
+    emitComplete('m04-condense', ok ? 100 : 40)
     m.msg = (ok ? '<span class="ok">✅ 答對!</span>' : '<span class="bad">❌ 答錯。</span>') +
       (m.quiz.ans === 'cond'
         ? '這是<b>冷凝</b>:水珠<b>均勻散佈</b>整面牆、顆粒狀、無特定源頭、跟天氣濕度連動。擦掉很快又出現。'

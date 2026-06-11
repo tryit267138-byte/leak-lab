@@ -5,6 +5,7 @@ import { MATERIAL_LIFE, redoCount, setupCount, costBreakdown } from '../../engin
 import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Hud } from '../../ui/Hud.jsx'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -29,7 +30,7 @@ export function Component() {
   const m = useRef({ year: 0 }).current
   const [, setTick] = useState(0)
   const acc = useRef(0)
-  const setYear = (v) => { m.year = v; setTick((t) => t + 1) }
+  const setYear = (v) => { m.year = v; if (v >= 15) emitComplete('m12-aging', 100); setTick((t) => t + 1) }
 
   const { ref } = useFixedCanvas((ctx, dt) => {
     const yr = m.year

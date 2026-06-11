@@ -4,6 +4,8 @@ import { useFixedCanvas } from '../../ui/useFixedCanvas.js'
 import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Hud } from '../../ui/Hud.jsx'
+import { sfx } from '../../engine/audio.js'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -20,7 +22,7 @@ const ROOFY = 300, DRIPY = 84, THRESH = 12
 export function Component() {
   const climb = useRef(new ParticleField(500)).current
   const over = useRef(new ParticleField(300)).current
-  const m = useRef({ wind: 8, innerWet: 0 }).current
+  const m = useRef({ wind: 8, innerWet: 0, shake: 0, wasOvertop: false }).current
   const [, setTick] = useState(0)
   const acc = useRef(0)
   const flush = () => setTick((t) => t + 1)
@@ -29,6 +31,8 @@ export function Component() {
   const { ref } = useFixedCanvas((ctx, dt) => {
     const w = m.wind
     const overtop = w > THRESH
+    if (overtop && !m.wasOvertop) { m.shake = 6; sfx.warn(); emitComplete('m11-winddriven', 100) }
+    m.wasOvertop = overtop
     m.innerWet = Math.max(0, Math.min(1, m.innerWet + (overtop ? (w - THRESH) * 0.06 : -0.12) * dt))
 
     // 沿外牆爬升的雨(向上初速∝風速,重力拉回 → 峰高∝風速)
@@ -43,13 +47,15 @@ export function Component() {
 
     // ── 繪圖 ──
     ctx.fillStyle = '#0a0d10'; ctx.fillRect(0, 0, 620, 340)
+    let sh = 0
+    if (m.shake > 0) { sh = m.shake; m.shake = Math.max(0, sh - dt * 45); ctx.save(); ctx.translate((Math.random() - 0.5) * sh, (Math.random() - 0.5) * sh) }
     // 屋頂(左)
     ctx.fillStyle = '#1a2129'; ctx.fillRect(0, ROOFY, 300, 40)
     ctx.fillStyle = '#16202a'; ctx.fillRect(0, ROOFY - 4, 300, 4)
     // 女兒牆牆身
     ctx.fillStyle = '#5e646c'; ctx.fillRect(308, 84, 32, ROOFY - 84)
-    // 內側未防水區(染色)
-    if (m.innerWet > 0.02) { ctx.fillStyle = `rgba(60,90,120,${m.innerWet * 0.8})`; ctx.fillRect(300, 90, 10, ROOFY - 90) }
+    // 內側未防水區(發光染色)
+    if (m.innerWet > 0.02) { ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = '#4aa3ff'; ctx.fillStyle = `rgba(60,90,120,${m.innerWet * 0.8})`; ctx.fillRect(300, 90, 10, ROOFY - 90); ctx.restore() }
     ctx.fillStyle = '#3a4350'; ctx.fillRect(300, 90, 8, ROOFY - 90) // 內面
     // 壓頂(cap)+ 滴水線
     ctx.fillStyle = '#6e747c'; ctx.fillRect(300, 68, 50, 16)
@@ -57,7 +63,7 @@ export function Component() {
     // 外側地面下方
     ctx.fillStyle = '#11161b'; ctx.fillRect(350, 84, 270, 256)
     // 粒子
-    climb.draw(ctx, '#7cc4ee'); over.draw(ctx, overtop ? '#ff8a78' : '#5db2e8')
+    climb.drawTrails(ctx, '#7cc4ee'); over.drawTrails(ctx, overtop ? '#ff8a78' : '#5db2e8')
     // 風向箭頭
     ctx.strokeStyle = 'rgba(180,200,210,0.5)'; ctx.lineWidth = 2
     for (let y = 120; y < 280; y += 50) { ctx.beginPath(); ctx.moveTo(440, y); ctx.lineTo(380, y); ctx.lineTo(388, y - 5); ctx.moveTo(380, y); ctx.lineTo(388, y + 5); ctx.stroke() }
@@ -69,6 +75,7 @@ export function Component() {
     ctx.fillStyle = '#7d8c98'; ctx.font = '12px sans-serif'
     ctx.fillText('屋頂', 40, ROOFY - 12); ctx.fillText('滴水線(水切)', 356, 96)
 
+    if (sh) ctx.restore()
     acc.current += dt; if (acc.current > 0.12) { acc.current = 0; flush() }
   })
 

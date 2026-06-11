@@ -82,6 +82,24 @@ export class ParticleField {
     ctx.restore()
   }
 
+  // 拖尾繪法:沿速度方向畫短線(motion blur),不需背景疊加,任何底圖皆可用
+  drawTrails(ctx, color = '#4aa3ff', k = 0.05) {
+    ctx.save()
+    ctx.strokeStyle = color
+    ctx.lineCap = 'round'
+    for (const p of this.pool) {
+      if (!p.alive) continue
+      const a = Math.max(0, Math.min(1, p.life / p.maxLife))
+      ctx.globalAlpha = 0.25 + a * 0.55
+      ctx.lineWidth = p.r * 1.5
+      ctx.beginPath()
+      ctx.moveTo(p.x, p.y)
+      ctx.lineTo(p.x - p.vx * k, p.y - p.vy * k)
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+
   clear() {
     for (const p of this.pool) p.alive = false
   }

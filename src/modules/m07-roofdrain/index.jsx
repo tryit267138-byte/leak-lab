@@ -5,6 +5,8 @@ import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Button } from '../../ui/Button.jsx'
 import { Hud } from '../../ui/Hud.jsx'
+import { sfx } from '../../engine/audio.js'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -53,13 +55,15 @@ export function Component() {
     rain.gravity = 60
     rain.update(dt, (p) => p.y < roofY(p.x))
     // 滲漏水滴
+    if (covered && !m.notified) { m.notified = true; emitComplete('m07-roofdrain', 100) }
     if (Math.random() < leakRate) { drip.emit({ x: crackX + R(-3, 3), y: crackY + 8, vy: 40, life: 2.2, r: 2 }); m.leak += leakRate }
+    if (leakRate > 0 && Math.random() < 0.04) sfx.drop()
     drip.gravity = 180
     drip.update(dt)
 
     // ── 繪圖 ──
     ctx.fillStyle = '#0a0d10'; ctx.fillRect(0, 0, 620, 340)
-    rain.draw(ctx, '#7cc4ee')
+    rain.drawTrails(ctx, '#7cc4ee')
     // 積水(水平水面;水覆蓋屋面較低的一側)
     if (m.depth > 0.5) {
       let xi = Math.abs(ryLow - ryHigh) < 0.5 ? 60 : 60 + (yWater - ryHigh) * 500 / (ryLow - ryHigh)
@@ -84,7 +88,7 @@ export function Component() {
     drawDrain(60, roofY(60), m.dL); drawDrain(560, roofY(560), m.dR)
     // 室內天花
     ctx.fillStyle = '#1a1f25'; ctx.fillRect(0, 300, 620, 40)
-    drip.draw(ctx, '#5db2e8')
+    drip.drawTrails(ctx, '#5db2e8')
     if (covered) { ctx.fillStyle = '#ff8a78'; ctx.font = '12px sans-serif'; ctx.fillText('天花板滲水', crackX + 10, 320) }
 
     ctx.fillStyle = '#dfe7ee'; ctx.font = '13px sans-serif'

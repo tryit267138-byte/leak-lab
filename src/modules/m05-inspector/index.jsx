@@ -2,6 +2,8 @@ import { useRef, useState } from 'react'
 import { useFixedCanvas } from '../../ui/useFixedCanvas.js'
 import { Panel } from '../../ui/Panel.jsx'
 import { Button } from '../../ui/Button.jsx'
+import { sfx } from '../../engine/audio.js'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -47,6 +49,8 @@ export function Component() {
     if (m.done) return
     m.done = true
     const ok = d === m.ans
+    sfx[ok ? 'correct' : 'wrong']()
+    emitComplete('m05-inspector', ok ? 100 : 40)
     const why = [
       '濕痕集中在窗角下方放射狀,灑水後讀值上升 → 窗框界面進水。',
       '濕度集中牆腳、越高越乾、灑水無反應 → 牆腳毛細吸水+鹽分析晶(壁癌)。',

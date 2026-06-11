@@ -5,6 +5,7 @@ import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Button } from '../../ui/Button.jsx'
 import { Hud } from '../../ui/Hud.jsx'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -41,6 +42,7 @@ export function Component() {
   const { ref } = useFixedCanvas((ctx, dt) => {
     m.t += dt
     const leaking = !m.band && m.density < (50 + m.rain * 0.3)
+    if (leaking) emitComplete('m09-joint', 100)
     // 沿縫橫向流動的水
     if (leaking && Math.random() < 0.5) flow.emit({ x: m.xEntry, y: JY, vx: (m.xExit - m.xEntry) / 1.4, vy: 0, life: 1.4, r: 1.8 })
     flow.gravity = 0; flow.update(dt, (p) => p.x < m.xExit)
@@ -62,7 +64,7 @@ export function Component() {
     // 完整水路虛線
     ctx.strokeStyle = leaking ? 'rgba(255,138,120,0.8)' : 'rgba(140,160,175,0.4)'; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5
     ctx.beginPath(); ctx.moveTo(m.xEntry, 0); ctx.lineTo(m.xEntry, JY); ctx.lineTo(m.xExit, JY); ctx.lineTo(m.xExit, 300); ctx.stroke(); ctx.setLineDash([])
-    flow.draw(ctx, '#7cc4ee'); drip.draw(ctx, '#5db2e8')
+    flow.drawTrails(ctx, '#7cc4ee'); drip.drawTrails(ctx, '#5db2e8')
     // 進水點 / 出水點
     ctx.fillStyle = '#ffd27b'; ctx.beginPath(); ctx.arc(m.xEntry, JY, 5, 0, 7); ctx.fill()
     ctx.font = '12px sans-serif'; ctx.fillText('進水點', m.xEntry - 18, JY - 8)

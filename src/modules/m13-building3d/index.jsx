@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { useStore } from '../../store.js'
 import { createRenderer, particleCap, FpsMonitor } from '../../engine/three3d.js'
+import { emitComplete } from '../../engine/labEvents.js'
 import { Panel } from '../../ui/Panel.jsx'
 import { Button } from '../../ui/Button.jsx'
 import shared from '../module.module.css'
@@ -193,8 +194,12 @@ export function Component() {
   api.current.onPart = (p) => setSelPart(p)
   api.current.onPerf = (v) => setPerfMode(v)
   api.current.onFps = (v) => setFps(v)
+  const viewed = useRef(new Set()).current
   const togglePaths = () => { const v = !showPaths; setShowPaths(v); sceneState.showPaths = v }
-  const pickPath = (i) => { const v = selPath === i ? -1 : i; setSelPath(v); sceneState.selPath = v; if (v >= 0 && !showPaths) togglePaths() }
+  const pickPath = (i) => {
+    const v = selPath === i ? -1 : i; setSelPath(v); sceneState.selPath = v
+    if (v >= 0) { viewed.add(i); if (viewed.size >= PATHS.length) emitComplete('m13-building3d', 100); if (!showPaths) togglePaths() }
+  }
 
   const info = selPart ? PART_INFO[selPart] : null
   return (

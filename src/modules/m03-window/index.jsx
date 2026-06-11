@@ -4,6 +4,8 @@ import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Button } from '../../ui/Button.jsx'
 import { Hud } from '../../ui/Hud.jsx'
+import { sfx } from '../../engine/audio.js'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -24,11 +26,12 @@ export function Component() {
   const flush = () => setTick((t) => t + 1)
   const setSeal = (s) => { m.seal = s; flush() }
   const setV = (v) => { m.v = v; flush() }
-  const reset = () => { m.leak = 0; m.stain = 0; flush() }
+  const reset = () => { m.leak = 0; m.stain = 0; m.notified = false; flush() }
 
   const { ref } = useFixedCanvas((ctx, dt) => {
     const v = m.v, P = v * v / 16
     const cap = m.seal === 'good' ? 50 : 15
+    if (m.leak > 0 && !m.notified) { m.notified = true; sfx.warn(); emitComplete('m03-window', 100) }
     for (let k = 0; k < 6; k++) m.rain.push({ x: R(-150, 620), y: -5, vx: v * 0.22 + R(-0.3, 0.3), vy: R(3, 4.5), slide: false })
     const FX = 200, FX2 = 420, FY = 90, FY2 = 250
     m.rain.forEach((d) => {

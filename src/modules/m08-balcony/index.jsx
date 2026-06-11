@@ -5,6 +5,8 @@ import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Button } from '../../ui/Button.jsx'
 import { Hud } from '../../ui/Hud.jsx'
+import { sfx } from '../../engine/audio.js'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -22,7 +24,7 @@ const CM = 4 // px per cm
 export function Component() {
   const rain = useRef(new ParticleField(400)).current
   const spill = useRef(new ParticleField(200)).current
-  const m = useRef({ th: 8, slope: 'out', blocked: false, storm: false, level: 0, indoorWet: 0, leak: 0 }).current
+  const m = useRef({ th: 8, slope: 'out', blocked: false, storm: false, level: 0, indoorWet: 0, leak: 0, shake: 0, wasOvertop: false }).current
   const [, setTick] = useState(0)
   const acc = useRef(0)
   const flush = () => setTick((t) => t + 1)
@@ -39,6 +41,8 @@ export function Component() {
     m.level = Math.max(0, Math.min(40, m.level + (inflow - drainEff) * dt))
     const thEff = Math.max(0, m.th - (m.slope === 'in' ? 3 : 0))
     const overtop = m.level > thEff
+    if (overtop && !m.wasOvertop) { m.shake = 7; sfx.warn(); emitComplete('m08-balcony', 100) }
+    m.wasOvertop = overtop
     if (overtop) {
       const rate = (m.level - thEff) * 0.5
       m.indoorWet = Math.min(1, m.indoorWet + rate * dt)
@@ -55,14 +59,16 @@ export function Component() {
 
     // ── 繪圖 ──
     ctx.fillStyle = '#0a0d10'; ctx.fillRect(0, 0, 620, 340)
+    let sh = 0
+    if (m.shake > 0) { sh = m.shake; m.shake = Math.max(0, sh - dt * 45); ctx.save(); ctx.translate((Math.random() - 0.5) * sh, (Math.random() - 0.5) * sh) }
     ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(THX, 0, RX1 - THX, 340) // 室內背景
-    rain.draw(ctx, '#7cc4ee')
+    rain.drawTrails(ctx, '#7cc4ee')
     // 陽台積水
     const surfY = FLOOR - m.level * CM
     if (m.level > 0.3) { ctx.fillStyle = 'rgba(74,163,255,0.45)'; ctx.fillRect(BX0, surfY, THX - BX0, FLOOR - surfY); ctx.fillStyle = '#6fb6e8'; ctx.fillRect(BX0, surfY, THX - BX0, 2) }
-    // 室內地板濕痕
-    if (m.indoorWet > 0.01) { ctx.fillStyle = `rgba(40,80,120,${m.indoorWet * 0.7})`; ctx.fillRect(THX + 16, FLOOR - 4, RX1 - THX - 16, 16) }
-    spill.draw(ctx, '#5db2e8')
+    // 室內地板濕痕(發光)
+    if (m.indoorWet > 0.01) { ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = '#4aa3ff'; ctx.fillStyle = `rgba(40,80,120,${m.indoorWet * 0.7})`; ctx.fillRect(THX + 16, FLOOR - 4, RX1 - THX - 16, 16); ctx.restore() }
+    spill.drawTrails(ctx, '#5db2e8')
     // 樓板
     ctx.fillStyle = '#3a4350'; ctx.fillRect(0, FLOOR, 620, 14)
     ctx.fillStyle = '#2a3340'; ctx.fillRect(THX + 16, FLOOR - 4, RX1 - THX - 16, 4) // 室內地板略高
@@ -86,6 +92,7 @@ export function Component() {
     ctx.fillText(`陽台水位 ${m.level.toFixed(0)}cm / 門檻 ${m.th}cm`, 16, 22)
     if (overtop) { ctx.fillStyle = '#ff8a78'; ctx.fillText('⚠ 水位漫過門檻,灌入室內', THX - 200, surfY - 8) }
 
+    if (sh) ctx.restore()
     acc.current += dt; if (acc.current > 0.12) { acc.current = 0; flush() }
   })
 

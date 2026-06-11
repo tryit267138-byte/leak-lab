@@ -3,6 +3,7 @@ import { useFixedCanvas } from '../../ui/useFixedCanvas.js'
 import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Hud } from '../../ui/Hud.jsx'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -17,7 +18,7 @@ export function Component() {
   const m = useRef({ cur: [0, 0, 0], d: 1 }).current
   const [, setTick] = useState(0)
   const acc = useRef(0)
-  const setD = (v) => { m.d = v; setTick((t) => t + 1) }
+  const setD = (v) => { m.d = v; if (v <= 0.3) emitComplete('m02-capillary', 100); setTick((t) => t + 1) }
 
   const { ref } = useFixedCanvas((ctx, dt) => {
     const ws = [2.0, m.d, 0.2] // mm

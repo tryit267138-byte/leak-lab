@@ -8,7 +8,7 @@ export function Hud({ items }) {
       {items.map((it, i) => (
         <div key={i} className={styles.item}>
           <span className={styles.label}>{it.label}</span>
-          <span className={[styles.value, styles[it.tone || 'normal']].join(' ')}>
+          <span key={String(it.value)} className={[styles.value, styles[it.tone || 'normal']].join(' ')}>
             {it.value}
           </span>
         </div>

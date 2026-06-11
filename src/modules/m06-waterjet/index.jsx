@@ -5,6 +5,8 @@ import { Panel } from '../../ui/Panel.jsx'
 import { Slider } from '../../ui/Slider.jsx'
 import { Button } from '../../ui/Button.jsx'
 import { Hud } from '../../ui/Hud.jsx'
+import { sfx, stopSpray } from '../../engine/audio.js'
+import { emitComplete } from '../../engine/labEvents.js'
 import shared from '../module.module.css'
 
 export const meta = {
@@ -72,7 +74,11 @@ export function Component() {
       m.weaks.forEach((w) => {
         if (!w.found && Math.hypot(w.x - m.nozzle.x, w.y - m.nozzle.y) < splashR) {
           w.dose += rate
-          if (w.dose > THRESH) w.found = true
+          if (w.dose > THRESH) {
+            w.found = true
+            sfx.correct()
+            emitComplete('m06-waterjet', m.weaks.filter((x) => x.found).length / 2 * 100)
+          }
         }
       })
       // 過壓誤判:>100 時連好縫也滲
@@ -80,7 +86,7 @@ export function Component() {
         const onWeak = m.weaks.some((w) => Math.hypot(w.x - m.nozzle.x, w.y - m.nozzle.y) < splashR)
         if (!onWeak) {
           m.goodDose += rate
-          if (m.goodDose > THRESH) { m.falseSeeps.push({ x: m.nozzle.x, y: m.nozzle.y }); m.goodDose = 0 }
+          if (m.goodDose > THRESH) { m.falseSeeps.push({ x: m.nozzle.x, y: m.nozzle.y }); m.goodDose = 0; sfx.warn() }
         }
       }
     }
@@ -98,7 +104,7 @@ export function Component() {
     ctx.fillStyle = '#46c79a'; ctx.fillRect(FX - 14, FY - 14, FX2 - FX + 28, 4); ctx.fillRect(FX - 14, FY2 + 10, FX2 - FX + 28, 4)
     ctx.fillRect(FX - 14, FY - 14, 4, FY2 - FY + 28); ctx.fillRect(FX2 + 10, FY - 14, 4, FY2 - FY + 28)
 
-    field.draw(ctx, '#7cc4ee')
+    field.drawTrails(ctx, '#7cc4ee')
 
     // 噴流導線 + 噴頭
     if (m.spraying) {
@@ -131,9 +137,9 @@ export function Component() {
   })
 
   const aim = (e) => { const pt = toLogical(e.clientX, e.clientY); m.nozzle = pt }
-  const down = (e) => { e.currentTarget.setPointerCapture?.(e.pointerId); m.spraying = true; aim(e) }
+  const down = (e) => { e.currentTarget.setPointerCapture?.(e.pointerId); m.spraying = true; aim(e); sfx.spray() }
   const move = (e) => { if (m.spraying) aim(e) }
-  const up = () => { m.spraying = false }
+  const up = () => { m.spraying = false; stopSpray() }
 
   const found = m.weaks.filter((w) => w.found).length
   return (
@@ -163,7 +169,7 @@ export function Component() {
         </Panel>
         <Panel title="教學重點">
           <p className={shared.note}>高壓灑水試驗是抓漏定位利器,但 SOP 是<b>由下而上、低壓開始、分區噴測</b>——慢慢逼近,看哪裡先滲。</p>
-          <p className={shared.note}>壓力一旦過高(>100),水會被打進<b>平常根本不會漏</b>的縫,連完好填縫都滲出,造成<b>過壓誤判</b>。寧可低壓多噴幾次。</p>
+          <p className={shared.note}>壓力一旦過高(&gt;100),水會被打進<b>平常根本不會漏</b>的縫,連完好填縫都滲出,造成<b>過壓誤判</b>。寧可低壓多噴幾次。</p>
         </Panel>
       </div>
     </div>
