@@ -6,8 +6,9 @@ import * as m03 from './modules/m03-window/index.jsx'
 import * as m04 from './modules/m04-condense/index.jsx'
 import * as m05 from './modules/m05-inspector/index.jsx'
 import * as m06 from './modules/m06-waterjet/index.jsx'
+import * as m07 from './modules/m07-roofdrain/index.jsx'
 
-const mods = [m01, m02, m03, m04, m05, m06]
+const mods = [m01, m02, m03, m04, m05, m06, m07]
 
 export const registry = mods.map((m) => ({ meta: m.meta, Component: m.Component }))
 
