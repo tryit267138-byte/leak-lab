@@ -75,4 +75,17 @@ export function costBreakdown(years, mat) {
   return { material: n * MATERIAL_COST[mat], setup: n * SETUP_COST, total: n * (MATERIAL_COST[mat] + SETUP_COST) }
 }
 
+// ── 高壓水槍檢測判定(m06 / m14 共用)──────────────
+// 註:m06 因「不得改動已驗收檔案」仍保留同式的 inline 版本;此處數值與其完全一致,
+// m14(3D 實測場)直接 import 這些函式,確保同參數同結果。
+export const WATERJET_THRESH = 100 // 局部累積水量達此值即判定該處滲漏/弱點定位
+// 單位時間累積水量:水壓越高、噴距越近,累積越快(對應 m06 的 rate 公式)
+export function waterjetDoseRate(pressureKgf, distCm, dt) {
+  return (pressureKgf / (1 + distCm * 0.12)) * dt * 6
+}
+// 水壓 > 100 → 過壓誤判風險(連完好填縫也會被打穿)
+export function waterjetOverpressure(pressureKgf) {
+  return pressureKgf > 100
+}
+
 export const G = 9.8 // 重力加速度(m/s²),2D 粒子引擎用

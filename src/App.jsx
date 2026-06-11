@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useStore } from './store.js'
 import { grouped, byKey } from './registry.js'
 import styles from './App.module.css'
+import shared from './modules/module.module.css'
 
 export default function App() {
   const currentKey = useStore((s) => s.currentKey)
@@ -44,7 +45,9 @@ export default function App() {
 
         <main className={styles.stage}>
           {current ? (
-            <current.Component key={current.meta.key} />
+            <Suspense fallback={<div className={shared.loading}>載入 3D 模組中…</div>}>
+              <current.Component key={current.meta.key} />
+            </Suspense>
           ) : (
             <div className={styles.welcome}>
               <h2>虛擬漏水實驗室</h2>

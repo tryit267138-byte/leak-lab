@@ -1,5 +1,7 @@
 // module_key → { meta, Component } 對照表。
-// 新增模組:在此 import 並加入陣列即可,App 會自動依 category 分組顯示。
+// 2D 模組靜態 import;3D 模組(three.js)用 lazy + dynamic import 拆 chunk,
+// meta 走輕量檔靜態載入,Component 延遲載入,不拖慢 2D 首次載入。
+import { lazy } from 'react'
 import * as m01 from './modules/m01-pressure/index.jsx'
 import * as m02 from './modules/m02-capillary/index.jsx'
 import * as m03 from './modules/m03-window/index.jsx'
@@ -12,10 +14,21 @@ import * as m09 from './modules/m09-joint/index.jsx'
 import * as m10 from './modules/m10-bathroom/index.jsx'
 import * as m11 from './modules/m11-winddriven/index.jsx'
 import * as m12 from './modules/m12-aging/index.jsx'
+// 3D:只靜態載入 meta(輕量,不含 three.js)
+import { meta as m13meta } from './modules/m13-building3d/meta.js'
+import { meta as m14meta } from './modules/m14-sitetest3d/meta.js'
 
 const mods = [m01, m02, m03, m04, m05, m06, m07, m08, m09, m10, m11, m12]
 
-export const registry = mods.map((m) => ({ meta: m.meta, Component: m.Component }))
+const lazyMods = [
+  { meta: m13meta, Component: lazy(() => import('./modules/m13-building3d/index.jsx').then((m) => ({ default: m.Component }))), lazy: true },
+  { meta: m14meta, Component: lazy(() => import('./modules/m14-sitetest3d/index.jsx').then((m) => ({ default: m.Component }))), lazy: true },
+]
+
+export const registry = [
+  ...mods.map((m) => ({ meta: m.meta, Component: m.Component })),
+  ...lazyMods,
+]
 
 export const byKey = Object.fromEntries(registry.map((r) => [r.meta.key, r]))
 
