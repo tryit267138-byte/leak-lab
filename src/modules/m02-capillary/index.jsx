@@ -8,7 +8,7 @@ import shared from '../module.module.css'
 export const meta = {
   key: 'm02-capillary',
   title: '毛細現象',
-  category: '壓力',
+  category: '水路',
   description: '縫越細,水沿縫逆重力爬得越高。髮絲裂縫(0.2mm)比明顯裂縫更危險。',
   difficulty: 1,
 }

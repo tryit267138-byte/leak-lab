@@ -9,7 +9,7 @@ import shared from '../module.module.css'
 export const meta = {
   key: 'm03-window',
   title: '窗框風雨試驗',
-  category: '水路',
+  category: '檢測',
   description: '風壓 P=v²/16,風速加倍壓力變四倍。老化填縫只有颱風天才漏。',
   difficulty: 2,
 }

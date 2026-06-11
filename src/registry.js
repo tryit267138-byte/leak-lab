@@ -5,15 +5,16 @@ import * as m02 from './modules/m02-capillary/index.jsx'
 import * as m03 from './modules/m03-window/index.jsx'
 import * as m04 from './modules/m04-condense/index.jsx'
 import * as m05 from './modules/m05-inspector/index.jsx'
+import * as m06 from './modules/m06-waterjet/index.jsx'
 
-const mods = [m01, m02, m03, m04, m05]
+const mods = [m01, m02, m03, m04, m05, m06]
 
 export const registry = mods.map((m) => ({ meta: m.meta, Component: m.Component }))
 
 export const byKey = Object.fromEntries(registry.map((r) => [r.meta.key, r]))
 
 // 分類顯示順序
-export const CATEGORY_ORDER = ['壓力', '水路', '環境', '檢測', '3D']
+export const CATEGORY_ORDER = ['壓力', '水路', '環境', '檢測', '材料', '3D']
 
 export function grouped() {
   const g = {}
