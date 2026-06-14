@@ -11,7 +11,8 @@ leak-lab 是獨立 Vite 應用,`git push` 後由 Vercel 部署。把整站或單
 
 ```html
 <!-- 整站(含首頁卡片牆) -->
-<iframe src="https://leak-lab.vercel.app/" width="100%" height="640"
+<!-- 線上網址(GitHub Pages):https://tryit267138-byte.github.io/leak-lab/ -->
+<iframe src="https://tryit267138-byte.github.io/leak-lab/" width="100%" height="640"
         style="border:0;border-radius:10px" allow="autoplay" title="虛擬漏水實驗室"></iframe>
 ```
 
