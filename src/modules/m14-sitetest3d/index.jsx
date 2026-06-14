@@ -5,7 +5,8 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { useStore } from '../../store.js'
-import { createRenderer, particleCap, FpsMonitor, isMobileDevice } from '../../engine/three3d.js'
+import { createRenderer, particleCap, FpsMonitor, isMobileDevice, makeEnvironment } from '../../engine/three3d.js'
+import { materialMaps } from '../../engine/textures.js'
 import { WATERJET_THRESH, waterjetDoseRate, waterjetOverpressure } from '../../engine/physics.js'
 import { sfx, stopSpray } from '../../engine/audio.js'
 import { emitComplete } from '../../engine/labEvents.js'
@@ -59,8 +60,10 @@ export function Component() {
     const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.05, 100)
     const camBase = new THREE.Vector3(0, 1.4, 0.2)
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.7))
-    const dl = new THREE.DirectionalLight(0xffffff, 0.7); dl.position.set(2, 4, 2); scene.add(dl)
+    scene.environment = makeEnvironment(renderer)
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4))
+    const dl = new THREE.DirectionalLight(0xffffff, 1.0); dl.position.set(2, 4, 2); scene.add(dl)
+    const maps = materialMaps()
 
     // Bloom 後製:噴流/濺射發光
     const composer = new EffectComposer(renderer)
@@ -70,12 +73,17 @@ export function Component() {
     composer.addPass(new OutputPass())
     let useBloom = true
 
-    // 牆 + 窗框 + 玻璃
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), new THREE.MeshStandardMaterial({ color: 0x2a333c, roughness: 1 }))
+    // 牆(混凝土)+ 窗框(填縫/橡膠)+ 玻璃(實體折射)
+    const wallTex = maps.concrete.map.clone(); wallTex.repeat.set(5, 3); wallTex.needsUpdate = true
+    const wallN = maps.concrete.normalMap.clone(); wallN.repeat.set(5, 3); wallN.needsUpdate = true
+    const wall = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), new THREE.MeshStandardMaterial({ map: wallTex, normalMap: wallN, color: 0x9aa3ad, roughness: 1, metalness: 0.05, normalScale: new THREE.Vector2(0.5, 0.5) }))
     wall.position.set(0, 1.5, WIN.z - 0.05); scene.add(wall)
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(WIN.w + 0.3, WIN.h + 0.3, 0.12), new THREE.MeshStandardMaterial({ color: 0x46c79a }))
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(WIN.w + 0.3, WIN.h + 0.3, 0.12), new THREE.MeshStandardMaterial({ color: 0x3aa888, roughness: 0.55, metalness: 0.1 }))
     frame.position.set(WIN.x, WIN.y, WIN.z); scene.add(frame)
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(WIN.w, WIN.h), new THREE.MeshStandardMaterial({ color: 0x16323f, transparent: true, opacity: 0.6 }))
+    const glassMat = isMobileDevice()
+      ? new THREE.MeshStandardMaterial({ color: 0x16323f, roughness: 0.05, metalness: 0.2, envMapIntensity: 1.6, transparent: true, opacity: 0.55 })
+      : new THREE.MeshPhysicalMaterial({ color: 0x1a3a48, roughness: 0.04, metalness: 0, transmission: 0.6, ior: 1.45, thickness: 0.3, transparent: true, opacity: 0.6 })
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(WIN.w, WIN.h), glassMat)
     glass.position.set(WIN.x, WIN.y, WIN.z + 0.07); scene.add(glass)
 
     // 弱點(隱藏)+ 命中標記
@@ -234,6 +242,7 @@ export function Component() {
       renderer.domElement.removeEventListener('pointerleave', up)
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku)
       composer.dispose()
+      if (scene.environment) scene.environment.dispose()
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { Array.isArray(o.material) ? o.material.forEach((m) => m.dispose()) : o.material.dispose() } })
       renderer.dispose()
       if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement)

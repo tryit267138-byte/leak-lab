@@ -6,7 +6,8 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { useStore } from '../../store.js'
-import { createRenderer, particleCap, FpsMonitor, isMobileDevice } from '../../engine/three3d.js'
+import { createRenderer, particleCap, FpsMonitor, isMobileDevice, makeEnvironment } from '../../engine/three3d.js'
+import { materialMaps } from '../../engine/textures.js'
 import { emitComplete } from '../../engine/labEvents.js'
 import { Panel } from '../../ui/Panel.jsx'
 import { Button } from '../../ui/Button.jsx'
@@ -63,8 +64,9 @@ export function Component() {
     controls.target.set(0, 1, 0)
     controls.minDistance = 5; controls.maxDistance = 22
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6))
-    const dir = new THREE.DirectionalLight(0xffffff, 0.8); dir.position.set(6, 10, 8); scene.add(dir)
+    scene.environment = makeEnvironment(renderer) // PBR 反射用程式化環境
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35))
+    const dir = new THREE.DirectionalLight(0xffffff, 1.1); dir.position.set(6, 10, 8); scene.add(dir)
 
     // ── Bloom 後製:讓水路發光粒子真正「發光」──
     const composer = new EffectComposer(renderer)
@@ -74,13 +76,24 @@ export function Component() {
     composer.addPass(new OutputPass())
     let useBloom = true
 
-    // ── 程式化剖切建築(前面 +z 開放,室內可見)──
+    // ── 程式化剖切建築(前面 +z 開放,室內可見)——真實 PBR 材質 ──
     const parts = []
-    const mat = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0.05 })
+    const maps = materialMaps()
+    const baseConcrete = new THREE.MeshStandardMaterial({ map: maps.concrete.map, normalMap: maps.concrete.normalMap, roughnessMap: maps.concrete.roughnessMap, roughness: 1, metalness: 0.05, normalScale: new THREE.Vector2(0.5, 0.5) })
+    const baseMetal = new THREE.MeshStandardMaterial({ color: 0x9aa2aa, metalness: 0.85, roughness: 0.4 })
+    const baseTile = new THREE.MeshStandardMaterial({ map: maps.tile.map, normalMap: maps.tile.normalMap, color: 0x3f8a78, roughness: 0.3, metalness: 0.05, normalScale: new THREE.Vector2(0.8, 0.8) })
+    const baseGlass = isMobileDevice()
+      ? new THREE.MeshStandardMaterial({ color: 0x16323f, roughness: 0.06, metalness: 0.2, envMapIntensity: 1.6, transparent: true, opacity: 0.55 })
+      : new THREE.MeshPhysicalMaterial({ color: 0x1a3a48, roughness: 0.05, metalness: 0, transmission: 0.55, ior: 1.4, thickness: 0.5, transparent: true, opacity: 0.6 })
+    const matFor = (part, color) => {
+      if (part === 'window') return baseGlass.clone()
+      if (part === 'parapet') return baseMetal.clone()
+      if (part === 'bathroom') return baseTile.clone()
+      const m = baseConcrete.clone(); m.color = new THREE.Color(color).multiplyScalar(1.6); return m
+    }
     const addBox = (w, h, d, x, y, z, color, part) => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat(color))
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), matFor(part, color))
       m.position.set(x, y, z); m.userData.part = part
-      m.userData.baseEmissive = 0x000000
       scene.add(m); parts.push(m); return m
     }
     // 樓板
@@ -199,6 +212,7 @@ export function Component() {
       renderer.domElement.removeEventListener('pointerup', onUp)
       controls.dispose()
       composer.dispose()
+      if (scene.environment) scene.environment.dispose()
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { Array.isArray(o.material) ? o.material.forEach((m) => m.dispose()) : o.material.dispose() } })
       renderer.dispose()
       if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement)

@@ -1,4 +1,14 @@
 import * as THREE from 'three'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+
+// 程式化環境光(RoomEnvironment,無外部 HDR 資產)→ PMREM,供 PBR 反射用。
+// 沒有它,金屬/玻璃的 metalness/反射會是死黑。
+export function makeEnvironment(renderer) {
+  const pmrem = new THREE.PMREMGenerator(renderer)
+  const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+  pmrem.dispose()
+  return env
+}
 
 // 行動裝置粒子上限 2000、桌機 8000(以觸控能力與畫面寬度判斷)
 export function isMobileDevice() {
