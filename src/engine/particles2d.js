@@ -1,6 +1,20 @@
 // 共用 2D 粒子引擎。各模組複用此引擎做水/水滴/水束模擬。
 // 純 canvas,無外部依賴。座標系:像素,y 向下為正。
 
+// 柔邊光斑 sprite 快取(依顏色),drawLiquid 用 drawImage 取代逐幀 radial gradient(效能)
+const _spriteCache = {}
+function liquidSprite(color) {
+  if (_spriteCache[color]) return _spriteCache[color]
+  const s = 64
+  const cv = document.createElement('canvas'); cv.width = cv.height = s
+  const c = cv.getContext('2d')
+  const g = c.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2)
+  g.addColorStop(0, color); g.addColorStop(0.35, color); g.addColorStop(1, 'transparent')
+  c.fillStyle = g; c.fillRect(0, 0, s, s)
+  _spriteCache[color] = cv
+  return cv
+}
+
 export class Particle {
   constructor() {
     this.reset()
@@ -78,6 +92,21 @@ export class ParticleField {
       ctx.beginPath()
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
       ctx.fill()
+    }
+    ctx.restore()
+  }
+
+  // 高級水體:柔邊光斑(sprite 快取)以 'lighter' 疊加 → 重疊處成團發光,像液體
+  drawLiquid(ctx, color = '#4aa3ff', scale = 4) {
+    const sp = liquidSprite(color)
+    ctx.save()
+    ctx.globalCompositeOperation = 'lighter'
+    for (const p of this.pool) {
+      if (!p.alive) continue
+      const a = Math.max(0, Math.min(1, p.life / p.maxLife))
+      const r = p.r * scale
+      ctx.globalAlpha = 0.1 + a * 0.22
+      ctx.drawImage(sp, p.x - r, p.y - r, r * 2, r * 2)
     }
     ctx.restore()
   }

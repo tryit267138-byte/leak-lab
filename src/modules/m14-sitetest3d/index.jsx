@@ -1,5 +1,9 @@
 import { useRef, useState, useEffect } from 'react'
 import * as THREE from 'three'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { useStore } from '../../store.js'
 import { createRenderer, particleCap, FpsMonitor, isMobileDevice } from '../../engine/three3d.js'
 import { WATERJET_THRESH, waterjetDoseRate, waterjetOverpressure } from '../../engine/physics.js'
@@ -57,6 +61,14 @@ export function Component() {
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.7))
     const dl = new THREE.DirectionalLight(0xffffff, 0.7); dl.position.set(2, 4, 2); scene.add(dl)
+
+    // Bloom 後製:噴流/濺射發光
+    const composer = new EffectComposer(renderer)
+    composer.addPass(new RenderPass(scene, camera))
+    const bloom = new UnrealBloomPass(new THREE.Vector2(container.clientWidth, container.clientHeight), isMobileDevice() ? 0.35 : 0.55, 0.4, 0.75)
+    composer.addPass(bloom)
+    composer.addPass(new OutputPass())
+    let useBloom = true
 
     // 牆 + 窗框 + 玻璃
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(10, 6), new THREE.MeshStandardMaterial({ color: 0x2a333c, roughness: 1 }))
@@ -123,9 +135,9 @@ export function Component() {
     }
 
     const fpsMon = new FpsMonitor({ onDrop: () => {
+      if (useBloom) { useBloom = false; api.current.onPerf && api.current.onPerf(true); return }
       if (nJet <= 200) return
       nJet = Math.floor(nJet / 2); nSpl = Math.floor(nSpl / 2); seed()
-      api.current.onPerf && api.current.onPerf(true)
     } })
 
     let raf = 0, last = 0, fpsAcc = 0
@@ -200,7 +212,7 @@ export function Component() {
         jet.visible = true; spl.visible = true
       } else { jet.visible = false; spl.visible = false }
 
-      renderer.render(scene, camera)
+      if (useBloom) composer.render(); else renderer.render(scene, camera)
       fpsMon.tick(dt, t)
       fpsAcc += dt; if (fpsAcc > 0.5) { fpsAcc = 0; api.current.onFps && api.current.onFps(Math.round(fpsMon.fps)); api.current.onDist && api.current.onDist(Math.round(st.distCm)) }
       raf = requestAnimationFrame(loop)
@@ -210,6 +222,7 @@ export function Component() {
     const ro = new ResizeObserver(() => {
       const w = container.clientWidth, h = container.clientHeight
       camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h)
+      composer.setSize(w, h); bloom.setSize(w, h)
     })
     ro.observe(container)
 
@@ -220,6 +233,7 @@ export function Component() {
       renderer.domElement.removeEventListener('pointerup', up)
       renderer.domElement.removeEventListener('pointerleave', up)
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku)
+      composer.dispose()
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { Array.isArray(o.material) ? o.material.forEach((m) => m.dispose()) : o.material.dispose() } })
       renderer.dispose()
       if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement)

@@ -104,7 +104,7 @@ export function Component() {
     ctx.fillStyle = '#46c79a'; ctx.fillRect(FX - 14, FY - 14, FX2 - FX + 28, 4); ctx.fillRect(FX - 14, FY2 + 10, FX2 - FX + 28, 4)
     ctx.fillRect(FX - 14, FY - 14, 4, FY2 - FY + 28); ctx.fillRect(FX2 + 10, FY - 14, 4, FY2 - FY + 28)
 
-    field.drawTrails(ctx, '#7cc4ee')
+    field.drawLiquid(ctx, '#3a8fd4'); field.drawTrails(ctx, '#bfeaff')
 
     // 噴流導線 + 噴頭
     if (m.spraying) {

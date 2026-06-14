@@ -88,7 +88,7 @@ export function Component() {
     drawDrain(60, roofY(60), m.dL); drawDrain(560, roofY(560), m.dR)
     // 室內天花
     ctx.fillStyle = '#1a1f25'; ctx.fillRect(0, 300, 620, 40)
-    drip.drawTrails(ctx, '#5db2e8')
+    drip.drawLiquid(ctx, '#4aa3ff'); drip.drawTrails(ctx, '#7cc4ee')
     if (covered) { ctx.fillStyle = '#ff8a78'; ctx.font = '12px sans-serif'; ctx.fillText('天花板滲水', crackX + 10, 320) }
 
     ctx.fillStyle = '#dfe7ee'; ctx.font = '13px sans-serif'

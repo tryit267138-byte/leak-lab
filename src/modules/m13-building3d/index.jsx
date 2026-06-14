@@ -1,8 +1,12 @@
 import { useRef, useState, useEffect } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { useStore } from '../../store.js'
-import { createRenderer, particleCap, FpsMonitor } from '../../engine/three3d.js'
+import { createRenderer, particleCap, FpsMonitor, isMobileDevice } from '../../engine/three3d.js'
 import { emitComplete } from '../../engine/labEvents.js'
 import { Panel } from '../../ui/Panel.jsx'
 import { Button } from '../../ui/Button.jsx'
@@ -62,6 +66,14 @@ export function Component() {
     scene.add(new THREE.AmbientLight(0xffffff, 0.6))
     const dir = new THREE.DirectionalLight(0xffffff, 0.8); dir.position.set(6, 10, 8); scene.add(dir)
 
+    // ── Bloom 後製:讓水路發光粒子真正「發光」──
+    const composer = new EffectComposer(renderer)
+    composer.addPass(new RenderPass(scene, camera))
+    const bloom = new UnrealBloomPass(new THREE.Vector2(container.clientWidth, container.clientHeight), isMobileDevice() ? 0.35 : 0.5, 0.4, 0.85)
+    composer.addPass(bloom)
+    composer.addPass(new OutputPass())
+    let useBloom = true
+
     // ── 程式化剖切建築(前面 +z 開放,室內可見)──
     const parts = []
     const mat = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.9, metalness: 0.05 })
@@ -109,8 +121,8 @@ export function Component() {
     })
     const CAP = particleCap()
     let nParticles = CAP
-    const pGeo = new THREE.SphereGeometry(0.045, 6, 6)
-    const pMat = new THREE.MeshBasicMaterial({ color: 0x8fdcff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
+    const pGeo = new THREE.SphereGeometry(0.034, 6, 6)
+    const pMat = new THREE.MeshBasicMaterial({ color: 0x4aa3ff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })
     let inst = new THREE.InstancedMesh(pGeo, pMat, CAP)
     inst.visible = false; scene.add(inst)
     const dummy = new THREE.Object3D()
@@ -144,9 +156,10 @@ export function Component() {
 
     // ── 迴圈 ──
     const fpsMon = new FpsMonitor({ onDrop: () => {
+      // 先關 Bloom(最貴),再降粒子數
+      if (useBloom) { useBloom = false; api.current.onPerf && api.current.onPerf(true); return }
       if (nParticles <= 250) return
       nParticles = Math.floor(nParticles / 2); seedParticles(nParticles)
-      api.current.onPerf && api.current.onPerf(true)
     } })
     let raf = 0, last = 0, tAcc = 0, fpsAcc = 0
     const loop = (tms) => {
@@ -166,7 +179,7 @@ export function Component() {
         }
         inst.count = nParticles; inst.instanceMatrix.needsUpdate = true
       }
-      renderer.render(scene, camera)
+      if (useBloom) composer.render(); else renderer.render(scene, camera)
       fpsMon.tick(dt, t)
       fpsAcc += dt; if (fpsAcc > 0.5) { fpsAcc = 0; api.current.onFps && api.current.onFps(Math.round(fpsMon.fps)) }
       raf = requestAnimationFrame(loop)
@@ -176,6 +189,7 @@ export function Component() {
     const ro = new ResizeObserver(() => {
       const w = container.clientWidth, h = container.clientHeight
       camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h)
+      composer.setSize(w, h); bloom.setSize(w, h)
     })
     ro.observe(container)
 
@@ -184,6 +198,7 @@ export function Component() {
       renderer.domElement.removeEventListener('pointerdown', onDown)
       renderer.domElement.removeEventListener('pointerup', onUp)
       controls.dispose()
+      composer.dispose()
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { Array.isArray(o.material) ? o.material.forEach((m) => m.dispose()) : o.material.dispose() } })
       renderer.dispose()
       if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement)

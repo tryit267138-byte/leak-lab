@@ -64,7 +64,7 @@ export function Component() {
     // 完整水路虛線
     ctx.strokeStyle = leaking ? 'rgba(255,138,120,0.8)' : 'rgba(140,160,175,0.4)'; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5
     ctx.beginPath(); ctx.moveTo(m.xEntry, 0); ctx.lineTo(m.xEntry, JY); ctx.lineTo(m.xExit, JY); ctx.lineTo(m.xExit, 300); ctx.stroke(); ctx.setLineDash([])
-    flow.drawTrails(ctx, '#7cc4ee'); drip.drawTrails(ctx, '#5db2e8')
+    flow.drawLiquid(ctx, '#4aa3ff'); flow.drawTrails(ctx, '#bfeaff'); drip.drawLiquid(ctx, '#4aa3ff'); drip.drawTrails(ctx, '#7cc4ee')
     // 進水點 / 出水點
     ctx.fillStyle = '#ffd27b'; ctx.beginPath(); ctx.arc(m.xEntry, JY, 5, 0, 7); ctx.fill()
     ctx.font = '12px sans-serif'; ctx.fillText('進水點', m.xEntry - 18, JY - 8)

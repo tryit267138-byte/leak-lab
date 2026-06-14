@@ -63,7 +63,7 @@ export function Component() {
     // 外側地面下方
     ctx.fillStyle = '#11161b'; ctx.fillRect(350, 84, 270, 256)
     // 粒子
-    climb.drawTrails(ctx, '#7cc4ee'); over.drawTrails(ctx, overtop ? '#ff8a78' : '#5db2e8')
+    climb.drawTrails(ctx, '#7cc4ee'); over.drawLiquid(ctx, overtop ? '#ff8a78' : '#4aa3ff'); over.drawTrails(ctx, overtop ? '#ffb0a0' : '#7cc4ee')
     // 風向箭頭
     ctx.strokeStyle = 'rgba(180,200,210,0.5)'; ctx.lineWidth = 2
     for (let y = 120; y < 280; y += 50) { ctx.beginPath(); ctx.moveTo(440, y); ctx.lineTo(380, y); ctx.lineTo(388, y - 5); ctx.moveTo(380, y); ctx.lineTo(388, y + 5); ctx.stroke() }

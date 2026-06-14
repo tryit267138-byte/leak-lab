@@ -68,7 +68,7 @@ export function Component() {
     if (m.level > 0.3) { ctx.fillStyle = 'rgba(74,163,255,0.45)'; ctx.fillRect(BX0, surfY, THX - BX0, FLOOR - surfY); ctx.fillStyle = '#6fb6e8'; ctx.fillRect(BX0, surfY, THX - BX0, 2) }
     // 室內地板濕痕(發光)
     if (m.indoorWet > 0.01) { ctx.save(); ctx.shadowBlur = 10; ctx.shadowColor = '#4aa3ff'; ctx.fillStyle = `rgba(40,80,120,${m.indoorWet * 0.7})`; ctx.fillRect(THX + 16, FLOOR - 4, RX1 - THX - 16, 16); ctx.restore() }
-    spill.drawTrails(ctx, '#5db2e8')
+    spill.drawLiquid(ctx, '#4aa3ff'); spill.drawTrails(ctx, '#7cc4ee')
     // 樓板
     ctx.fillStyle = '#3a4350'; ctx.fillRect(0, FLOOR, 620, 14)
     ctx.fillStyle = '#2a3340'; ctx.fillRect(THX + 16, FLOOR - 4, RX1 - THX - 16, 4) // 室內地板略高
